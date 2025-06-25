@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { FileText, Download, ArrowLeft, Upload, Settings, Eye, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -18,6 +17,7 @@ const PdfToPptConverter = () => {
   const [outputFormat, setOutputFormat] = useState("pptx");
   const [convertedFile, setConvertedFile] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<string>("");
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -71,6 +71,34 @@ const PdfToPptConverter = () => {
     }
   };
 
+  const createDownloadableFile = (fileName: string, compressionRatio: number) => {
+    // Create a mock PPT file content for demonstration
+    const mockPptContent = `
+      PK\x03\x04\x14\x00\x00\x00\x08\x00
+      Mock PowerPoint Content
+      Converted from: ${file?.name}
+      Format: ${outputFormat.toUpperCase()}
+      Compression: ${compressionLevel}
+      Generated at: ${new Date().toISOString()}
+    `;
+    
+    const blob = new Blob([mockPptContent], {
+      type: outputFormat === 'pptx' 
+        ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        : 'application/vnd.ms-powerpoint'
+    });
+    
+    const url = URL.createObjectURL(blob);
+    setDownloadUrl(url);
+    
+    // Calculate compressed file size
+    const originalSize = file!.size;
+    const compressedSize = Math.floor(originalSize * compressionRatio);
+    setFileSize(`${(compressedSize / (1024 * 1024)).toFixed(1)} MB`);
+    
+    return fileName;
+  };
+
   const simulateConversion = async () => {
     setIsConverting(true);
     setConversionProgress(0);
@@ -83,13 +111,12 @@ const PdfToPptConverter = () => {
       setConversionProgress(intervals[i]);
     }
     
-    // Simulate file creation
-    const originalSize = file!.size;
+    // Create downloadable file
     const compressionRatio = compressionLevel === 'basic' ? 0.8 : compressionLevel === 'medium' ? 0.6 : 0.4;
-    const compressedSize = Math.floor(originalSize * compressionRatio);
+    const fileName = `converted-presentation.${outputFormat}`;
     
-    setFileSize(`${(compressedSize / (1024 * 1024)).toFixed(1)} MB`);
-    setConvertedFile(`converted-presentation.${outputFormat}`);
+    createDownloadableFile(fileName, compressionRatio);
+    setConvertedFile(fileName);
     setIsConverting(false);
     
     toast({
@@ -112,7 +139,23 @@ const PdfToPptConverter = () => {
   };
 
   const handleDownload = () => {
-    // This would normally trigger the actual download
+    if (!downloadUrl || !convertedFile) {
+      toast({
+        title: "Download not ready",
+        description: "Please convert a file first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = convertedFile;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
       title: "Download started",
       description: `Downloading ${convertedFile} (${fileSize})`,
