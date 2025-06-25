@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight } from "lucide-react";
+import { QrCode, FileText, ArrowRight, File } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -28,6 +28,18 @@ const Index = () => {
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
       hoverColor: 'hover:from-green-600 hover:to-emerald-700'
+    },
+    {
+      id: 'pdf-to-ppt',
+      title: 'PDF to PPT Converter',
+      description: 'Convert PDF files to PowerPoint presentations with compression',
+      icon: File,
+      path: '/pdf-to-ppt',
+      gradient: 'from-orange-500 to-red-600',
+      bgGradient: 'from-orange-50 to-red-100',
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+      hoverColor: 'hover:from-orange-600 hover:to-red-700'
     }
   ];
 
@@ -49,7 +61,7 @@ const Index = () => {
         </div>
 
         {/* Tools Grid */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {tools.map((tool) => {
             const IconComponent = tool.icon;
             return (
