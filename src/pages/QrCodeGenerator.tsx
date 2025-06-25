@@ -15,7 +15,7 @@ const QrCodeGenerator = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [bottomText, setBottomText] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
-  const [downloadFormat, setDownloadFormat] = useState("png");
+  const [qrSize, setQrSize] = useState("300");
 
   const generateQrCode = () => {
     if (!text.trim()) {
@@ -29,17 +29,12 @@ const QrCodeGenerator = () => {
     
     // Using QR Server API for QR code generation with logo support
     const encodedText = encodeURIComponent(text);
-    let url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedText}`;
+    let url = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodedText}`;
     
     // Add logo if provided
     if (logoUrl.trim()) {
       const encodedLogo = encodeURIComponent(logoUrl);
       url += `&logo=${encodedLogo}`;
-    }
-    
-    // Set format
-    if (downloadFormat === 'svg') {
-      url += '&format=svg';
     }
     
     setQrCodeUrl(url);
@@ -50,16 +45,22 @@ const QrCodeGenerator = () => {
     });
   };
 
-  const downloadQrCode = async () => {
+  const downloadQrCode = async (format: string) => {
     if (!qrCodeUrl) return;
     
     try {
-      const response = await fetch(qrCodeUrl);
+      // Create URL with specific format
+      let downloadUrl = qrCodeUrl;
+      if (format === 'svg') {
+        downloadUrl += '&format=svg';
+      }
+      
+      const response = await fetch(downloadUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `qrcode.${downloadFormat}`;
+      a.download = `qrcode.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -67,7 +68,7 @@ const QrCodeGenerator = () => {
       
       toast({
         title: "Downloaded",
-        description: `QR code downloaded as ${downloadFormat.toUpperCase()}!`,
+        description: `QR code downloaded as ${format.toUpperCase()}!`,
       });
     } catch (error) {
       toast({
@@ -157,6 +158,24 @@ const QrCodeGenerator = () => {
               {showAdvanced && (
                 <Card className="bg-gray-50">
                   <CardContent className="pt-6 space-y-4">
+                    {/* QR Code Size */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        QR Code Size
+                      </label>
+                      <Select value={qrSize} onValueChange={setQrSize}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="200">200x200 (Small)</SelectItem>
+                          <SelectItem value="300">300x300 (Medium)</SelectItem>
+                          <SelectItem value="400">400x400 (Large)</SelectItem>
+                          <SelectItem value="500">500x500 (Extra Large)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Text Below QR Code */}
                     <div className="space-y-2">
                       <label htmlFor="bottom-text" className="text-sm font-medium text-gray-700">
@@ -220,31 +239,23 @@ const QrCodeGenerator = () => {
                     )}
                   </div>
                   
-                  {/* Download Options and Format Selection - Now outside advanced options */}
-                  <div className="space-y-3">
-                    <div className="flex justify-center">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block text-center">
-                          Download Format
-                        </label>
-                        <Select value={downloadFormat} onValueChange={setDownloadFormat}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue placeholder="Select format" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="png">PNG</SelectItem>
-                            <SelectItem value="svg">SVG</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center">
-                      <Button onClick={downloadQrCode} className="bg-green-600 hover:bg-green-700">
-                        <Download className="mr-2 h-4 w-4" />
-                        Download {downloadFormat.toUpperCase()}
-                      </Button>
-                    </div>
+                  {/* Download Options - Side by Side */}
+                  <div className="flex justify-center gap-4">
+                    <Button 
+                      onClick={() => downloadQrCode('png')} 
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download PNG
+                    </Button>
+                    <Button 
+                      onClick={() => downloadQrCode('svg')} 
+                      variant="outline" 
+                      className="border-green-600 text-green-600 hover:bg-green-50"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download SVG
+                    </Button>
                   </div>
                 </div>
               )}
