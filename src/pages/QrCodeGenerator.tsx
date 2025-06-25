@@ -78,16 +78,6 @@ const QrCodeGenerator = () => {
     }
   };
 
-  const copyQrCodeUrl = () => {
-    if (!qrCodeUrl) return;
-    
-    navigator.clipboard.writeText(qrCodeUrl);
-    toast({
-      title: "Copied",
-      description: "QR code URL copied to clipboard!",
-    });
-  };
-
   const copyToClipboard = () => {
     navigator.clipboard.writeText(text);
     toast({
@@ -167,22 +157,6 @@ const QrCodeGenerator = () => {
               {showAdvanced && (
                 <Card className="bg-gray-50">
                   <CardContent className="pt-6 space-y-4">
-                    {/* Download Format Selection */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Download Format
-                      </label>
-                      <Select value={downloadFormat} onValueChange={setDownloadFormat}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="png">PNG</SelectItem>
-                          <SelectItem value="svg">SVG</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
                     {/* Text Below QR Code */}
                     <div className="space-y-2">
                       <label htmlFor="bottom-text" className="text-sm font-medium text-gray-700">
@@ -246,16 +220,31 @@ const QrCodeGenerator = () => {
                     )}
                   </div>
                   
-                  {/* Download and Copy Options */}
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <Button onClick={downloadQrCode} variant="outline" className="flex-1 sm:flex-none">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download {downloadFormat.toUpperCase()}
-                    </Button>
-                    <Button onClick={copyQrCodeUrl} variant="outline" className="flex-1 sm:flex-none">
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy URL
-                    </Button>
+                  {/* Download Options and Format Selection - Now outside advanced options */}
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 block text-center">
+                          Download Format
+                        </label>
+                        <Select value={downloadFormat} onValueChange={setDownloadFormat}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select format" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="png">PNG</SelectItem>
+                            <SelectItem value="svg">SVG</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <Button onClick={downloadQrCode} className="bg-green-600 hover:bg-green-700">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download {downloadFormat.toUpperCase()}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
