@@ -1,15 +1,23 @@
-import { useState, useRef } from "react";
-import { FileText, Download, ArrowLeft, Upload, Settings, Eye, Zap } from "lucide-react";
+
+import { useState } from "react";
+import { FileText, ArrowLeft, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
+import FileUploadZone from "@/components/pdf-converter/FileUploadZone";
+import AdvancedOptions from "@/components/pdf-converter/AdvancedOptions";
+import ConversionProgress from "@/components/pdf-converter/ConversionProgress";
+import DownloadSection from "@/components/pdf-converter/DownloadSection";
+import {
+  createDownloadableFile,
+  simulateConversion,
+  calculateCompressedSize,
+  formatFileSize
+} from "@/utils/pdfConverter";
 
 const PdfToPptConverter = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -18,255 +26,6 @@ const PdfToPptConverter = () => {
   const [convertedFile, setConvertedFile] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<string>("");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const pdfFile = droppedFiles.find(file => file.type === 'application/pdf');
-    
-    if (pdfFile) {
-      if (pdfFile.size > 50 * 1024 * 1024) { // 50MB limit
-        toast({
-          title: "File too large",
-          description: "Please select a PDF file smaller than 50MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      setFile(pdfFile);
-    } else {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a PDF file",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select a PDF file smaller than 50MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      setFile(selectedFile);
-    }
-  };
-
-  const createDownloadableFile = (fileName: string, compressionRatio: number) => {
-    // Create a valid PowerPoint XML structure
-    const presentationXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:sldMasterIdLst>
-    <p:sldMasterId id="2147483648" r:id="rId1"/>
-  </p:sldMasterIdLst>
-  <p:sldIdLst>
-    <p:sldId id="256" r:id="rId2"/>
-  </p:sldIdLst>
-  <p:sldSz cx="9144000" cy="6858000" type="screen4x3"/>
-  <p:notesSz cx="6858000" cy="9144000"/>
-</p:presentation>`;
-
-    const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:cSld>
-    <p:spTree>
-      <p:nvGrpSpPr>
-        <p:cNvPr id="1" name=""/>
-        <p:cNvGrpSpPr/>
-        <p:nvPr/>
-      </p:nvGrpSpPr>
-      <p:grpSpPr>
-        <a:xfrm>
-          <a:off x="0" y="0"/>
-          <a:ext cx="0" cy="0"/>
-          <a:chOff x="0" y="0"/>
-          <a:chExt cx="0" cy="0"/>
-        </a:xfrm>
-      </p:grpSpPr>
-      <p:sp>
-        <p:nvSpPr>
-          <p:cNvPr id="2" name="Title 1"/>
-          <p:cNvSpPr>
-            <a:spLocks noGrp="1"/>
-          </p:cNvSpPr>
-          <p:nvPr>
-            <p:ph type="ctrTitle"/>
-          </p:nvPr>
-        </p:nvSpPr>
-        <p:spPr/>
-        <p:txBody>
-          <a:bodyPr/>
-          <a:lstStyle/>
-          <a:p>
-            <a:r>
-              <a:rPr lang="en-US" dirty="0" smtClean="0"/>
-              <a:t>Converted from PDF: ${file?.name || 'Document'}</a:t>
-            </a:r>
-            <a:endParaRPr lang="en-US" dirty="0"/>
-          </a:p>
-        </p:txBody>
-      </p:sp>
-    </p:spTree>
-  </p:cSld>
-  <p:clrMapOvr>
-    <a:masterClrMapping/>
-  </p:clrMapOvr>
-</p:sld>`;
-
-    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-presentationml.presentation.main+xml"/>
-  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-presentationml.slide+xml"/>
-  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-presentationml.slideMaster+xml"/>
-  <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-presentationml.slideLayout+xml"/>
-</Types>`;
-
-    const appXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <Application>PDF to PPT Converter</Application>
-  <Company>Web App</Company>
-  <AppVersion>1.0</AppVersion>
-</Properties>`;
-
-    const coreXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <dc:title>Converted Presentation</dc:title>
-  <dc:creator>PDF to PPT Converter</dc:creator>
-  <dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString()}</dcterms:created>
-  <dcterms:modified xsi:type="dcterms:W3CDTF">${new Date().toISOString()}</dcterms:modified>
-</cp:coreProperties>`;
-
-    const mainRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
-</Relationships>`;
-
-    const presentationRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
-</Relationships>`;
-
-    const slideMasterXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:cSld>
-    <p:spTree>
-      <p:nvGrpSpPr>
-        <p:cNvPr id="1" name=""/>
-        <p:cNvGrpSpPr/>
-        <p:nvPr/>
-      </p:nvGrpSpPr>
-      <p:grpSpPr>
-        <a:xfrm>
-          <a:off x="0" y="0"/>
-          <a:ext cx="0" cy="0"/>
-          <a:chOff x="0" y="0"/>
-          <a:chExt cx="0" cy="0"/>
-        </a:xfrm>
-      </p:grpSpPr>
-    </p:spTree>
-  </p:cSld>
-  <p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>
-  <p:sldLayoutIdLst>
-    <p:sldLayoutId id="2147483649" r:id="rId1"/>
-  </p:sldLayoutIdLst>
-</p:sldMaster>`;
-
-    const slideLayoutXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="title" preserve="1">
-  <p:cSld name="Title Slide">
-    <p:spTree>
-      <p:nvGrpSpPr>
-        <p:cNvPr id="1" name=""/>
-        <p:cNvGrpSpPr/>
-        <p:nvPr/>
-      </p:nvGrpSpPr>
-      <p:grpSpPr>
-        <a:xfrm>
-          <a:off x="0" y="0"/>
-          <a:ext cx="0" cy="0"/>
-          <a:chOff x="0" y="0"/>
-          <a:chExt cx="0" cy="0"/>
-        </a:xfrm>
-      </p:grpSpPr>
-    </p:spTree>
-  </p:cSld>
-  <p:clrMapOvr>
-    <a:masterClrMapping/>
-  </p:clrMapOvr>
-</p:sldLayout>`;
-
-    // Create a simple ZIP-like structure for PPTX
-    const zipContent = `UEsDBAoAAAAAAIdYgVcAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEsDBBQAAAAIAIdYgVc${btoa(appXml).replace(/[+]/g, '-').replace(/[/]/g, '_')}UEsDBBQAAAAIAIdYgVc${btoa(coreXml).replace(/[+]/g, '-').replace(/[/]/g, '_')}UEsDBBQAAAAIAIdYgVc${btoa(contentTypesXml).replace(/[+]/g, '-').replace(/[/]/g, '_')}UEsDBBQAAAAIAIdYgVc${btoa(presentationXml).replace(/[+]/g, '-').replace(/[/]/g, '_')}UEsDBBQAAAAIAIdYgVc${btoa(slideXml).replace(/[+]/g, '-').replace(/[/]/g, '_')}UEsBAAAAAAAAAAAAAAAAAAAAAUEsDBAAAAAA`;
-
-    // For simplicity, create a basic file that indicates it's a converted presentation
-    const mockPptContent = `Converted from PDF: ${file?.name}\nFormat: ${outputFormat.toUpperCase()}\nCompression: ${compressionLevel}\nGenerated: ${new Date().toISOString()}\n\nThis is a mock PowerPoint file created by PDF to PPT Converter.\nFor a fully functional converter, integration with specialized libraries would be required.`;
-    
-    const blob = new Blob([mockPptContent], {
-      type: outputFormat === 'pptx' 
-        ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        : 'application/vnd.ms-powerpoint'
-    });
-    
-    const url = URL.createObjectURL(blob);
-    setDownloadUrl(url);
-    
-    // Calculate compressed file size
-    const originalSize = file!.size;
-    const compressedSize = Math.floor(originalSize * compressionRatio);
-    setFileSize(`${(compressedSize / (1024 * 1024)).toFixed(1)} MB`);
-    
-    return fileName;
-  };
-
-  const simulateConversion = async () => {
-    setIsConverting(true);
-    setConversionProgress(0);
-    
-    // Simulate conversion progress
-    const intervals = [10, 25, 45, 65, 80, 95, 100];
-    
-    for (let i = 0; i < intervals.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setConversionProgress(intervals[i]);
-    }
-    
-    // Create downloadable file
-    const compressionRatio = compressionLevel === 'basic' ? 0.8 : compressionLevel === 'medium' ? 0.6 : 0.4;
-    const fileName = `converted-presentation.${outputFormat}`;
-    
-    createDownloadableFile(fileName, compressionRatio);
-    setConvertedFile(fileName);
-    setIsConverting(false);
-    
-    toast({
-      title: "Conversion completed successfully!",
-      description: `Your PDF has been converted to ${outputFormat.toUpperCase()} format`,
-    });
-  };
 
   const handleConvert = () => {
     if (!file) {
@@ -278,7 +37,33 @@ const PdfToPptConverter = () => {
       return;
     }
     
-    simulateConversion();
+    performConversion();
+  };
+
+  const performConversion = async () => {
+    setIsConverting(true);
+    setConversionProgress(0);
+    
+    await simulateConversion(setConversionProgress);
+    
+    // Create downloadable file
+    const blob = createDownloadableFile(file!, compressionLevel, outputFormat);
+    const url = URL.createObjectURL(blob);
+    setDownloadUrl(url);
+    
+    const fileName = `converted-presentation.${outputFormat}`;
+    setConvertedFile(fileName);
+    
+    // Calculate compressed file size
+    const compressedSize = calculateCompressedSize(file!.size, compressionLevel);
+    setFileSize(formatFileSize(compressedSize));
+    
+    setIsConverting(false);
+    
+    toast({
+      title: "Conversion completed successfully!",
+      description: `Your PDF has been converted to ${outputFormat.toUpperCase()} format`,
+    });
   };
 
   const handleDownload = () => {
@@ -291,7 +76,6 @@ const PdfToPptConverter = () => {
       return;
     }
 
-    // Create a temporary anchor element to trigger download
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = convertedFile;
@@ -303,13 +87,6 @@ const PdfToPptConverter = () => {
       title: "Download started",
       description: `Downloading ${convertedFile} (${fileSize})`,
     });
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(1)} KB`;
-    }
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
@@ -334,117 +111,17 @@ const PdfToPptConverter = () => {
               <CardTitle className="text-center">Upload & Convert Your PDF</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* File Upload Area */}
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragging
-                    ? 'border-green-500 bg-green-50'
-                    : file
-                    ? 'border-green-300 bg-green-50'
-                    : 'border-gray-300 hover:border-green-400'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                {file ? (
-                  <div className="space-y-2">
-                    <FileText className="h-12 w-12 text-green-600 mx-auto" />
-                    <div>
-                      <p className="font-medium text-gray-900">{file.name}</p>
-                      <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
-                    </div>
-                    <Button 
-                      onClick={() => setFile(null)} 
-                      variant="outline" 
-                      size="sm"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto" />
-                    <div>
-                      <p className="text-lg font-medium text-gray-900">
-                        Drag & drop your PDF file here
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        or click to browse (max 50MB)
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={() => fileInputRef.current?.click()}
-                      variant="outline"
-                    >
-                      Browse Files
-                    </Button>
-                  </div>
-                )}
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </div>
+              <FileUploadZone file={file} onFileSelect={setFile} />
 
-              {/* Advanced Options Toggle */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Advanced Options</span>
-                </Button>
-              </div>
+              <AdvancedOptions
+                showAdvanced={showAdvanced}
+                onToggleAdvanced={() => setShowAdvanced(!showAdvanced)}
+                compressionLevel={compressionLevel}
+                onCompressionChange={setCompressionLevel}
+                outputFormat={outputFormat}
+                onFormatChange={setOutputFormat}
+              />
 
-              {/* Advanced Options Panel */}
-              {showAdvanced && (
-                <Card className="bg-gray-50">
-                  <CardContent className="pt-6 space-y-4">
-                    {/* Compression Level */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Compression Level
-                      </label>
-                      <Select value={compressionLevel} onValueChange={setCompressionLevel}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select compression level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="basic">Basic (Default)</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High (Max Compression)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Output Format */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Output Format
-                      </label>
-                      <Select value={outputFormat} onValueChange={setOutputFormat}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select output format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pptx">PPTX (PowerPoint)</SelectItem>
-                          <SelectItem value="ppt">PPT (Legacy)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Convert Button */}
               <Button 
                 onClick={handleConvert} 
                 className="w-full bg-green-600 hover:bg-green-700"
@@ -463,47 +140,15 @@ const PdfToPptConverter = () => {
                 )}
               </Button>
 
-              {/* Progress Bar */}
-              {isConverting && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>Converting PDF to PowerPoint...</span>
-                    <span>{conversionProgress}%</span>
-                  </div>
-                  <Progress value={conversionProgress} className="w-full" />
-                </div>
-              )}
+              <ConversionProgress isConverting={isConverting} progress={conversionProgress} />
 
-              {/* Download Section */}
-              {convertedFile && !isConverting && (
-                <div className="text-center space-y-4">
-                  <div className="bg-white p-4 rounded-lg border-2 border-green-200">
-                    <div className="flex items-center justify-center space-x-3 mb-3">
-                      <FileText className="h-8 w-8 text-green-600" />
-                      <div>
-                        <p className="font-medium text-gray-900">{convertedFile}</p>
-                        <p className="text-sm text-gray-500">Size: {fileSize}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center gap-4">
-                      <Button 
-                        onClick={handleDownload} 
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download {outputFormat.toUpperCase()}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="border-green-600 text-green-600 hover:bg-green-50"
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Preview
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+              {!isConverting && (
+                <DownloadSection
+                  convertedFile={convertedFile}
+                  fileSize={fileSize}
+                  outputFormat={outputFormat}
+                  onDownload={handleDownload}
+                />
               )}
             </CardContent>
           </Card>
