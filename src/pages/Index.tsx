@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight } from "lucide-react";
+import { QrCode, FileText, ArrowRight, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -27,6 +27,18 @@ const Index = () => {
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
       hoverColor: 'hover:from-green-600 hover:to-emerald-700'
+    },
+    {
+      id: 'image-compressor',
+      title: 'Image Compressor',
+      description: 'Compress JPG, PNG, WebP images with customizable quality settings',
+      icon: ImageIcon,
+      path: '/image-compressor',
+      gradient: 'from-purple-500 to-violet-600',
+      bgGradient: 'from-purple-50 to-violet-100',
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600',
+      hoverColor: 'hover:from-purple-600 hover:to-violet-700'
     }
   ];
 
