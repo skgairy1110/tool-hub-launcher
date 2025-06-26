@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ImageIcon } from 'lucide-react';
@@ -70,7 +69,10 @@ const ImageCompressor = () => {
     try {
       for (let i = 0; i < uploadedImages.length; i++) {
         const file = uploadedImages[i];
+        console.log(`Compressing ${file.name}, original size: ${file.size} bytes`);
+        
         const compressedBlob = await compressImage(file, settings);
+        console.log(`Compressed ${file.name}, new size: ${compressedBlob.size} bytes`);
         
         compressed.push({
           id: `${file.name}-${Date.now()}-${i}`,
@@ -89,6 +91,7 @@ const ImageCompressor = () => {
         description: `Successfully compressed ${compressed.length} image(s).`,
       });
     } catch (error) {
+      console.error('Compression error:', error);
       toast({
         title: "Compression failed",
         description: "An error occurred while compressing images.",
@@ -100,14 +103,20 @@ const ImageCompressor = () => {
   };
 
   const compressImage = (file: File, settings: CompressionSettings): Promise<Blob> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
+      const ctx = canvas.getContext('2d');
       const img = new Image();
+
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
 
       img.onload = () => {
         let { width, height } = img;
 
+        // Apply resize if specified
         if (settings.resize && settings.width && settings.height) {
           width = settings.width;
           height = settings.height;
@@ -116,17 +125,69 @@ const ImageCompressor = () => {
         canvas.width = width;
         canvas.height = height;
 
+        // Clear canvas and draw image
+        ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
 
+        // Determine output format and quality
+        let outputFormat = 'image/jpeg'; // Default to JPEG for better compression
         let quality = settings.quality / 100;
-        if (settings.mode === 'lossless') quality = 1;
-        if (settings.mode === 'high') quality = Math.min(quality * 0.7, 0.6);
+
+        // Apply compression mode adjustments
+        switch (settings.mode) {
+          case 'lossless':
+            // For lossless, use PNG format with maximum quality
+            outputFormat = 'image/png';
+            quality = 1.0;
+            break;
+          case 'balanced':
+            // Use JPEG with specified quality
+            outputFormat = 'image/jpeg';
+            break;
+          case 'high':
+            // Use JPEG with reduced quality for maximum compression
+            outputFormat = 'image/jpeg';
+            quality = Math.min(quality * 0.6, 0.5); // More aggressive compression
+            break;
+        }
+
+        // For PNG files in non-lossless mode, convert to JPEG for better compression
+        if (file.type === 'image/png' && settings.mode !== 'lossless') {
+          outputFormat = 'image/jpeg';
+        }
+
+        console.log(`Converting ${file.name} to ${outputFormat} with quality ${quality}`);
 
         canvas.toBlob(
-          (blob) => resolve(blob!),
-          file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+          (blob) => {
+            if (blob) {
+              // Ensure we actually achieved compression (unless lossless mode)
+              if (settings.mode !== 'lossless' && blob.size >= file.size) {
+                // If the compressed version is not smaller, try with lower quality
+                const lowerQuality = Math.max(0.3, quality * 0.7);
+                console.log(`Retrying compression with lower quality: ${lowerQuality}`);
+                
+                canvas.toBlob(
+                  (retryBlob) => {
+                    resolve(retryBlob || blob);
+                  },
+                  outputFormat,
+                  lowerQuality
+                );
+              } else {
+                resolve(blob);
+              }
+            } else {
+              reject(new Error('Failed to compress image'));
+            }
+          },
+          outputFormat,
           quality
         );
+      };
+
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
       };
 
       img.src = URL.createObjectURL(file);
