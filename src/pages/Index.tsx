@@ -1,5 +1,6 @@
+
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight, ImageIcon } from "lucide-react";
+import { QrCode, FileText, ArrowRight, ImageIcon, Type } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -39,6 +40,18 @@ const Index = () => {
       iconBg: 'bg-purple-100',
       iconColor: 'text-purple-600',
       hoverColor: 'hover:from-purple-600 hover:to-violet-700'
+    },
+    {
+      id: 'case-converter',
+      title: 'Text Case Converter',
+      description: 'Convert text between different cases: uppercase, lowercase, title case, and more',
+      icon: Type,
+      path: '/case-converter',
+      gradient: 'from-orange-500 to-red-600',
+      bgGradient: 'from-orange-50 to-red-100',
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+      hoverColor: 'hover:from-orange-600 hover:to-red-700'
     }
   ];
 
