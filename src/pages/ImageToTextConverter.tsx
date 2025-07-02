@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { createWorker } from 'tesseract.js';
 
 const ImageToTextConverter = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [extractedText, setExtractedText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,6 +22,7 @@ const ImageToTextConverter = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
           setSelectedImage(e.target?.result as string);
+          setExtractedText(""); // Clear previous text
         };
         reader.readAsDataURL(file);
       } else {
@@ -43,16 +46,52 @@ const ImageToTextConverter = () => {
     }
 
     setIsProcessing(true);
-    
-    // Simulate OCR processing (in a real app, you'd use an OCR service)
-    setTimeout(() => {
-      setExtractedText("This is a demo text extraction. In a real application, this would use an OCR service like Tesseract.js, Google Vision API, or similar service to extract actual text from the uploaded image.");
-      setIsProcessing(false);
-      toast({
-        title: "Success",
-        description: "Text extracted successfully!",
+    setProgress(0);
+    setExtractedText("");
+
+    try {
+      const worker = await createWorker('eng');
+      
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?@#$%^&*()_+-=[]{}|;:\'",.<>/?`~',
       });
-    }, 2000);
+
+      const { data: { text } } = await worker.recognize(selectedImage, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            const progressPercent = Math.round(m.progress * 100);
+            setProgress(progressPercent);
+          }
+        }
+      });
+
+      await worker.terminate();
+
+      if (text.trim()) {
+        setExtractedText(text.trim());
+        toast({
+          title: "Success",
+          description: "Text extracted successfully!",
+        });
+      } else {
+        setExtractedText("No text found in the image. Please try with a clearer image containing text.");
+        toast({
+          title: "No text found",
+          description: "The image doesn't appear to contain readable text",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('OCR Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to extract text from image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+      setProgress(0);
+    }
   };
 
   const copyText = () => {
@@ -122,7 +161,10 @@ const ImageToTextConverter = () => {
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
                   {isProcessing ? (
-                    "Processing..."
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Processing... {progress > 0 && `${progress}%`}
+                    </div>
                   ) : (
                     <>
                       <FileText className="mr-2 h-4 w-4" />
