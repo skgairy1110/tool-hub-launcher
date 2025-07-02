@@ -1,6 +1,5 @@
-
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight, ImageIcon, Type } from "lucide-react";
+import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -52,6 +51,18 @@ const Index = () => {
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
       hoverColor: 'hover:from-orange-600 hover:to-red-700'
+    },
+    {
+      id: 'chart-generator',
+      title: 'Chart Generator',
+      description: 'Create beautiful charts and graphs with customizable options and export as SVG or PNG',
+      icon: BarChart3,
+      path: '/chart-generator',
+      gradient: 'from-teal-500 to-cyan-600',
+      bgGradient: 'from-teal-50 to-cyan-100',
+      iconBg: 'bg-teal-100',
+      iconColor: 'text-teal-600',
+      hoverColor: 'hover:from-teal-600 hover:to-cyan-700'
     }
   ];
 
