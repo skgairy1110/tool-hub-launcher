@@ -139,7 +139,29 @@ const CaseConverter = () => {
     }
   };
 
-  const handleConvert = () => {
+  const handleConvertSingle = (caseType: string) => {
+    if (!inputText.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some text to convert",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const convertedText = convertText(inputText, caseType);
+    setResults(prev => ({
+      ...prev,
+      [caseType]: convertedText
+    }));
+
+    toast({
+      title: "Success",
+      description: `Text converted to ${caseTypes.find(ct => ct.id === caseType)?.title}!`,
+    });
+  };
+
+  const handleConvertAll = () => {
     if (!inputText.trim()) {
       toast({
         title: "Error",
@@ -233,49 +255,73 @@ const CaseConverter = () => {
                 <span>Paragraphs: {stats.paragraphs}</span>
               </div>
 
-              <Button 
-                onClick={handleConvert} 
-                className="w-full bg-orange-600 hover:bg-orange-700"
-                disabled={!inputText.trim()}
-              >
-                <Type className="mr-2 h-4 w-4" />
-                Convert Text
-              </Button>
+              {/* Case Conversion Buttons */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Choose Case Type</h3>
+                  <Button 
+                    onClick={handleConvertAll} 
+                    className="bg-orange-600 hover:bg-orange-700"
+                    disabled={!inputText.trim()}
+                  >
+                    Convert All
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {caseTypes.map((caseType) => (
+                    <Button
+                      key={caseType.id}
+                      onClick={() => handleConvertSingle(caseType.id)}
+                      variant="outline"
+                      className="h-auto p-3 flex flex-col items-start text-left border-2 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200"
+                      disabled={!inputText.trim()}
+                    >
+                      <span className="font-medium text-sm">{caseType.title}</span>
+                      <span className="text-xs text-gray-500 mt-1">{caseType.description}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* Results Section */}
           {Object.keys(results).length > 0 && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {caseTypes.map((caseType) => (
-                <Card key={caseType.id} className="shadow-lg border-0">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span>{caseType.title}</span>
-                      <Button
-                        onClick={() => copyToClipboard(results[caseType.id], caseType.title)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </CardTitle>
-                    <p className="text-sm text-gray-500">{caseType.description}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-sm font-mono break-words">
-                        {results[caseType.id] || caseType.example}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card className="shadow-xl border-0 mb-6">
+              <CardHeader>
+                <CardTitle>Converted Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {caseTypes.map((caseType) => (
+                    results[caseType.id] && (
+                      <div key={caseType.id} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-sm">{caseType.title}</h4>
+                          <Button
+                            onClick={() => copyToClipboard(results[caseType.id], caseType.title)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="bg-white p-3 rounded border">
+                          <p className="text-sm font-mono break-words">
+                            {results[caseType.id]}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Help Section */}
-          <Card className="shadow-xl border-0 mt-8">
+          <Card className="shadow-xl border-0">
             <CardHeader>
               <CardTitle>How to Use</CardTitle>
             </CardHeader>
