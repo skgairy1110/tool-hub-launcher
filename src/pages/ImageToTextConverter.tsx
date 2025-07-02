@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Image, Upload, Copy, ArrowLeft, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -46,7 +45,6 @@ const ImageToTextConverter = () => {
     }
 
     setIsProcessing(true);
-    setProgress(0);
     setExtractedText("");
 
     try {
@@ -56,14 +54,7 @@ const ImageToTextConverter = () => {
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?@#$%^&*()_+-=[]{}|;:\'",.<>/?`~',
       });
 
-      const { data: { text } } = await worker.recognize(selectedImage, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            const progressPercent = Math.round(m.progress * 100);
-            setProgress(progressPercent);
-          }
-        }
-      });
+      const { data: { text } } = await worker.recognize(selectedImage);
 
       await worker.terminate();
 
@@ -90,7 +81,6 @@ const ImageToTextConverter = () => {
       });
     } finally {
       setIsProcessing(false);
-      setProgress(0);
     }
   };
 
