@@ -11,6 +11,7 @@ import ImageCompressor from "./pages/ImageCompressor";
 import PdfToPptConverter from "./pages/PdfToPptConverter";
 import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
+import ImageEnhancePro from "./pages/ImageEnhancePro";
 
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/pdf-to-ppt" element={<PdfToPptConverter />} />
           <Route path="/case-converter" element={<CaseConverter />} />
           <Route path="/chart-generator" element={<ChartGenerator />} />
+          <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

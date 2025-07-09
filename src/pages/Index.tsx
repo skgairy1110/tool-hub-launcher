@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3 } from "lucide-react";
+import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -63,6 +63,18 @@ const Index = () => {
       iconBg: 'bg-teal-100',
       iconColor: 'text-teal-600',
       hoverColor: 'hover:from-teal-600 hover:to-cyan-700'
+    },
+    {
+      id: 'image-enhance-pro',
+      title: 'Image Enhance Pro',
+      description: 'AI-powered image enhancement: sharpen, denoise, upscale up to 4x, and auto color correction',
+      icon: Sparkles,
+      path: '/image-enhance-pro',
+      gradient: 'from-indigo-500 to-purple-600',
+      bgGradient: 'from-indigo-50 to-purple-100',
+      iconBg: 'bg-indigo-100',
+      iconColor: 'text-indigo-600',
+      hoverColor: 'hover:from-indigo-600 hover:to-purple-700'
     },
   ];
 
