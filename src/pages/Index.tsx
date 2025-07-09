@@ -76,18 +76,6 @@ const Index = () => {
       iconColor: 'text-indigo-600',
       hoverColor: 'hover:from-indigo-600 hover:to-purple-700'
     },
-    {
-      id: 'ai-headshot-pro',
-      title: 'AI Headshot Pro',
-      description: 'Transform selfies into studio-quality professional headshots with AI styling and retouching',
-      icon: User,
-      path: '/ai-headshot-pro',
-      gradient: 'from-blue-500 to-indigo-600',
-      bgGradient: 'from-blue-50 to-indigo-100',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      hoverColor: 'hover:from-blue-600 hover:to-indigo-700'
-    },
   ];
 
   return (
