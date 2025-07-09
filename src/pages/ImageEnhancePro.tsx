@@ -10,7 +10,9 @@ import {
   EyeOff,
   Loader2,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +37,8 @@ const ImageEnhancePro = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [fullView, setFullView] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -201,12 +205,31 @@ const ImageEnhancePro = () => {
     });
   }, [enhancedImage, toast]);
 
+  const handleSliderDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const position = ((clientX - rect.left) / rect.width) * 100;
+    setSliderPosition(Math.max(0, Math.min(100, position)));
+  }, [isDragging]);
+
+  const handleSliderStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleSliderEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
   const resetAll = useCallback(() => {
     setOriginalImage(null);
     setEnhancedImage(null);
     setShowComparison(false);
+    setFullView(false);
     setProgress(0);
     setIsProcessing(false);
+    setSliderPosition(50);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -377,7 +400,7 @@ const ImageEnhancePro = () => {
                       </div>
                     </div>
                   ) : (
-                    // Before/After Comparison
+                    // Interactive Comparison Slider
                     <div className="p-8">
                       <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-semibold flex items-center gap-2">
@@ -386,13 +409,13 @@ const ImageEnhancePro = () => {
                         </h3>
                         <div className="flex items-center space-x-4">
                           <Button
-                            onClick={() => setShowComparison(!showComparison)}
+                            onClick={() => setFullView(!fullView)}
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2"
                           >
-                            {showComparison ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            {showComparison ? 'Hide' : 'Show'} Comparison
+                            {fullView ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                            {fullView ? 'Show Comparison' : 'Full View'}
                           </Button>
                           <div className="flex gap-2">
                             <Button
@@ -415,29 +438,94 @@ const ImageEnhancePro = () => {
                         </div>
                       </div>
 
-                      {/* Side-by-side comparison */}
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-3">Original</h4>
-                          <div className="relative rounded-2xl overflow-hidden shadow-lg">
-                            <img
-                              src={originalImage.url}
-                              alt="Original"
-                              className="w-full h-auto max-h-80 object-contain bg-muted"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-muted-foreground mb-3">Enhanced</h4>
-                          <div className="relative rounded-2xl overflow-hidden shadow-lg">
+                      {fullView ? (
+                        // Full Enhanced Image View
+                        <div className="transition-all duration-500 ease-in-out">
+                          <h4 className="text-sm font-medium text-muted-foreground mb-3">Enhanced Image</h4>
+                          <div className="relative rounded-2xl overflow-hidden shadow-lg max-w-4xl mx-auto">
                             <img
                               src={enhancedImage!}
                               alt="Enhanced"
-                              className="w-full h-auto max-h-80 object-contain bg-muted"
+                              className="w-full h-auto object-contain bg-muted"
                             />
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        // Interactive Slider Comparison
+                        <div className="max-w-4xl mx-auto">
+                          <div className="text-center mb-4">
+                            <p className="text-sm text-muted-foreground">
+                              Drag the slider to compare original vs enhanced
+                            </p>
+                          </div>
+                          
+                          <div 
+                            className="relative rounded-2xl overflow-hidden shadow-lg cursor-col-resize select-none"
+                            style={{ aspectRatio: `${originalImage.width}/${originalImage.height}` }}
+                            onMouseDown={handleSliderStart}
+                            onMouseUp={handleSliderEnd}
+                            onMouseMove={handleSliderDrag}
+                            onTouchStart={handleSliderStart}
+                            onTouchEnd={handleSliderEnd}
+                            onTouchMove={handleSliderDrag}
+                            onMouseLeave={handleSliderEnd}
+                          >
+                            {/* Enhanced Image (Background) */}
+                            <img
+                              src={enhancedImage!}
+                              alt="Enhanced"
+                              className="absolute inset-0 w-full h-full object-contain bg-muted"
+                              draggable={false}
+                            />
+                            
+                            {/* Original Image (Overlay with clip-path) */}
+                            <div 
+                              className="absolute inset-0 transition-all duration-75"
+                              style={{ 
+                                clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)`
+                              }}
+                            >
+                              <img
+                                src={originalImage.url}
+                                alt="Original"
+                                className="w-full h-full object-contain bg-muted"
+                                draggable={false}
+                              />
+                              
+                              {/* Original Label */}
+                              <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                Original
+                              </div>
+                            </div>
+                            
+                            {/* Enhanced Label */}
+                            <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+                              Enhanced
+                            </div>
+                            
+                            {/* Slider Handle */}
+                            <div 
+                              className="absolute top-0 bottom-0 w-1 bg-white shadow-lg transition-all duration-75"
+                              style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+                            >
+                              {/* Slider Thumb */}
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center cursor-col-resize border-2 border-gray-200 hover:border-indigo-500 transition-colors">
+                                <ArrowLeft className="h-3 w-3 text-gray-600 absolute left-2" />
+                                <ArrowRight className="h-3 w-3 text-gray-600 absolute right-2" />
+                              </div>
+                            </div>
+                            
+                            {/* Hint Animation (Initial Load) */}
+                            {sliderPosition === 50 && (
+                              <div className="absolute inset-0 pointer-events-none">
+                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm animate-pulse">
+                                  ← Drag to compare →
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
