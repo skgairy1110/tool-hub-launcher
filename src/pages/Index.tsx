@@ -64,18 +64,6 @@ const Index = () => {
       iconColor: 'text-teal-600',
       hoverColor: 'hover:from-teal-600 hover:to-cyan-700'
     },
-    {
-      id: 'ai-humanizer',
-      title: 'AI Text Humanizer',
-      description: 'Transform AI-generated text into natural, human-like writing that passes AI detection',
-      icon: Type,
-      path: '/ai-humanizer',
-      gradient: 'from-pink-500 to-rose-600',
-      bgGradient: 'from-pink-50 to-rose-100',
-      iconBg: 'bg-pink-100',
-      iconColor: 'text-pink-600',
-      hoverColor: 'hover:from-pink-600 hover:to-rose-700'
-    }
   ];
 
   return (

@@ -11,7 +11,7 @@ import ImageCompressor from "./pages/ImageCompressor";
 import PdfToPptConverter from "./pages/PdfToPptConverter";
 import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
-import AiHumanizer from "./pages/AiHumanizer";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +30,7 @@ const App = () => (
           <Route path="/pdf-to-ppt" element={<PdfToPptConverter />} />
           <Route path="/case-converter" element={<CaseConverter />} />
           <Route path="/chart-generator" element={<ChartGenerator />} />
-          <Route path="/ai-humanizer" element={<AiHumanizer />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
