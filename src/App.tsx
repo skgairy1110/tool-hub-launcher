@@ -12,6 +12,7 @@ import PdfToPptConverter from "./pages/PdfToPptConverter";
 import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
 import ImageEnhancePro from "./pages/ImageEnhancePro";
+import InstagramDownloader from "./pages/InstagramDownloader";
 
 
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/case-converter" element={<CaseConverter />} />
           <Route path="/chart-generator" element={<ChartGenerator />} />
           <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
+          <Route path="/instagram-downloader" element={<InstagramDownloader />} />
           
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3, Sparkles, User } from "lucide-react";
+import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3, Sparkles, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -75,6 +75,18 @@ const Index = () => {
       iconBg: 'bg-indigo-100',
       iconColor: 'text-indigo-600',
       hoverColor: 'hover:from-indigo-600 hover:to-purple-700'
+    },
+    {
+      id: 'instagram-downloader',
+      title: 'Instagram Video Downloader',
+      description: 'Download Instagram videos, reels, and stories in high quality with just a URL',
+      icon: Video,
+      path: '/instagram-downloader',
+      gradient: 'from-pink-500 to-rose-600',
+      bgGradient: 'from-pink-50 to-rose-100',
+      iconBg: 'bg-pink-100',
+      iconColor: 'text-pink-600',
+      hoverColor: 'hover:from-pink-600 hover:to-rose-700'
     },
   ];
 
