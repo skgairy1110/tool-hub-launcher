@@ -67,8 +67,8 @@ const InstagramDownloader = () => {
       description: `Downloading ${format.quality} video...`,
     });
     
-    // Create a mock download - in real implementation, this would be the actual video URL
-    const mockVideoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    // Create a mock download using free sample video service
+    const mockVideoUrl = "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
     const fileName = `instagram_video_${format.quality.toLowerCase().replace(/[^a-z0-9]/g, '_')}.mp4`;
     
     // Create download link and trigger download
