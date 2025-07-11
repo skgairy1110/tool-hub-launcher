@@ -66,7 +66,19 @@ const InstagramDownloader = () => {
       title: "Download Started",
       description: `Downloading ${format.quality} video...`,
     });
-    // In real implementation, this would trigger the actual download
+    
+    // Create a mock download - in real implementation, this would be the actual video URL
+    const mockVideoUrl = "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
+    const fileName = `instagram_video_${format.quality.toLowerCase().replace(/[^a-z0-9]/g, '_')}.mp4`;
+    
+    // Create download link and trigger download
+    const link = document.createElement('a');
+    link.href = mockVideoUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const clearResults = () => {
