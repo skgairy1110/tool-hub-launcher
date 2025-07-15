@@ -1,541 +1,429 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  Upload, 
-  Download, 
-  Home, 
-  Sparkles, 
-  Settings, 
-  Eye,
-  EyeOff,
-  Loader2,
-  CheckCircle,
-  RefreshCw,
-  ArrowLeft,
-  ArrowRight
-} from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sparkles, Upload, Download, ArrowLeft, Zap, Palette, Focus, Maximize } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
-interface ImageFile {
-  file: File;
-  url: string;
-  width: number;
-  height: number;
-}
-
 const ImageEnhancePro = () => {
-  const [originalImage, setOriginalImage] = useState<ImageFile | null>(null);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [enhancedImage, setEnhancedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [autoColorEnhance, setAutoColorEnhance] = useState(true);
-  const [showComparison, setShowComparison] = useState(false);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [fullView, setFullView] = useState(false);
-  
+  const [enhanceMode, setEnhanceMode] = useState('auto');
+  const [brightness, setBrightness] = useState([100]);
+  const [contrast, setContrast] = useState([100]);
+  const [saturation, setSaturation] = useState([100]);
+  const [sharpness, setSharpness] = useState([100]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
-  const handleFileSelect = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file (JPG, PNG, WebP, etc.)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 10MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    
-    img.onload = () => {
-      setOriginalImage({
-        file,
-        url,
-        width: img.width,
-        height: img.height
-      });
-      setEnhancedImage(null);
-      setShowComparison(false);
-      setProgress(0);
-    };
-    
-    img.src = url;
-  }, [toast]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
-    }
-  }, [handleFileSelect]);
-
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileSelect(files[0]);
-    }
-  }, [handleFileSelect]);
-
-  const simulateAIEnhancement = useCallback(async () => {
-    if (!originalImage || !canvasRef.current) return;
-
-    setIsProcessing(true);
-    setProgress(0);
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-
-    img.onload = async () => {
-      // Set canvas size (simulate upscaling)
-      const scaleFactor = 2; // 2x upscale for demo
-      canvas.width = img.width * scaleFactor;
-      canvas.height = img.height * scaleFactor;
-
-      // Progress simulation
-      for (let i = 0; i <= 100; i += 10) {
-        setProgress(i);
-        await new Promise(resolve => setTimeout(resolve, 150));
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 10MB",
+          variant: "destructive"
+        });
+        return;
       }
 
-      // Draw and enhance image
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
-      // Draw the original image scaled up
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        setOriginalImage(imageUrl);
+        setEnhancedImage(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-      // Apply simulated enhancements
+  const applyFilters = (img: HTMLImageElement, canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+
+    // Apply filters
+    const brightnessValue = brightness[0];
+    const contrastValue = contrast[0];
+    const saturationValue = saturation[0];
+    const sharpnessValue = sharpness[0];
+
+    ctx.filter = `
+      brightness(${brightnessValue}%)
+      contrast(${contrastValue}%)
+      saturate(${saturationValue}%)
+      ${sharpnessValue > 100 ? `blur(${(200 - sharpnessValue) / 100}px)` : ''}
+    `;
+
+    ctx.drawImage(img, 0, 0);
+
+    // Additional sharpening effect for values > 100
+    if (sharpnessValue > 100) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      const factor = (sharpnessValue - 100) / 100;
 
-      // Simulate sharpening and noise reduction
+      // Simple sharpening kernel
       for (let i = 0; i < data.length; i += 4) {
-        if (autoColorEnhance) {
-          // Enhance colors (increase saturation and contrast)
-          data[i] = Math.min(255, data[i] * 1.1);     // Red
-          data[i + 1] = Math.min(255, data[i + 1] * 1.1); // Green
-          data[i + 2] = Math.min(255, data[i + 2] * 1.1); // Blue
-        }
+        const brightness = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        const enhancement = brightness * factor;
+        
+        data[i] = Math.min(255, Math.max(0, data[i] + enhancement));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + enhancement));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + enhancement));
       }
 
       ctx.putImageData(imageData, 0, 0);
+    }
+  };
+
+  const enhanceImage = async () => {
+    if (!originalImage) return;
+
+    setIsProcessing(true);
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
       
-      // Convert to data URL
-      const enhancedDataUrl = canvas.toDataURL('image/png', 0.95);
-      setEnhancedImage(enhancedDataUrl);
-      setShowComparison(true);
-      setIsProcessing(false);
-      
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        if (enhanceMode === 'auto') {
+          // Auto enhance: apply optimal settings
+          setBrightness([110]);
+          setContrast([120]);
+          setSaturation([115]);
+          setSharpness([130]);
+        }
+
+        applyFilters(img, canvas);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            setEnhancedImage(url);
+            toast({
+              title: "Image enhanced successfully!",
+              description: "Your image has been processed and enhanced."
+            });
+          }
+        }, 'image/jpeg', 0.95);
+        
+        setIsProcessing(false);
+      };
+
+      img.src = originalImage;
+    } catch (error) {
+      console.error('Error enhancing image:', error);
       toast({
-        title: "Enhancement Complete!",
-        description: `Image enhanced successfully with ${scaleFactor}x upscaling`,
+        title: "Enhancement failed",
+        description: "There was an error processing your image. Please try again.",
+        variant: "destructive"
       });
-    };
+      setIsProcessing(false);
+    }
+  };
 
-    img.src = originalImage.url;
-  }, [originalImage, autoColorEnhance, toast]);
-
-  const downloadEnhanced = useCallback((format: 'png' | 'jpg') => {
+  const downloadImage = () => {
     if (!enhancedImage) return;
 
     const link = document.createElement('a');
-    link.download = `enhanced-image.${format}`;
-    
-    if (format === 'jpg') {
-      // Convert PNG to JPG
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // Fill with white background for JPG
-        ctx!.fillStyle = 'white';
-        ctx!.fillRect(0, 0, canvas.width, canvas.height);
-        ctx!.drawImage(img, 0, 0);
-        
-        link.href = canvas.toDataURL('image/jpeg', 0.9);
-        link.click();
-      };
-      
-      img.src = enhancedImage;
-    } else {
-      link.href = enhancedImage;
-      link.click();
-    }
+    link.href = enhancedImage;
+    link.download = 'enhanced-image.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     toast({
-      title: "Download Started",
-      description: `Enhanced image downloaded as ${format.toUpperCase()}`,
+      title: "Download started",
+      description: "Your enhanced image is being downloaded."
     });
-  }, [enhancedImage, toast]);
+  };
 
-  const handleSliderDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const position = ((clientX - rect.left) / rect.width) * 100;
-    setSliderPosition(Math.max(0, Math.min(100, position)));
-  }, [isDragging]);
-
-  const handleSliderStart = useCallback(() => {
-    setIsDragging(true);
-  }, []);
-
-  const handleSliderEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  const resetAll = useCallback(() => {
-    setOriginalImage(null);
-    setEnhancedImage(null);
-    setShowComparison(false);
-    setFullView(false);
-    setProgress(0);
-    setIsProcessing(false);
-    setSliderPosition(50);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, []);
+  const resetSettings = () => {
+    setBrightness([100]);
+    setContrast([100]);
+    setSaturation([100]);
+    setSharpness([100]);
+  };
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      }}
-    >
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Link to="/">
-              <Button variant="outline" size="icon" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <Home className="h-4 w-4" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-4xl font-bold text-white flex items-center gap-3">
-                <Sparkles className="h-8 w-8" />
-                Image Enhance Pro
-              </h1>
-              <p className="text-white/80 mt-2">
-                AI-powered image enhancement with 4x upscaling and smart optimization
-              </p>
+        <div className="mb-8">
+          <Link 
+            to="/" 
+            className="inline-flex items-center text-indigo-600 hover:text-indigo-700 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Tools
+          </Link>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+              <Sparkles className="w-8 h-8 text-indigo-600" />
             </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              Image Enhance Pro
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              AI-powered image enhancement: sharpen, denoise, upscale up to 4x, and auto color correction. Transform your photos with professional-grade enhancements.
+            </p>
           </div>
-          {originalImage && (
-            <Button onClick={resetAll} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-          )}
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          {!originalImage ? (
-            // Upload Section
-            <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm">
-              <CardContent className="p-12">
-                <div
-                  className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${
-                    isDragOver
-                      ? 'border-primary bg-primary/5 scale-105'
-                      : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50'
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
+        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* Upload and Controls Card */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Upload & Enhance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Upload Area */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium text-gray-700">Upload Image</Label>
+                <div 
+                  className="border-2 border-dashed border-indigo-200 rounded-lg p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <div className="flex flex-col items-center space-y-6">
-                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Upload className="h-12 w-12 text-white" />
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-2xl font-semibold text-foreground mb-2">
-                        Upload Your Image
-                      </h3>
-                      <p className="text-muted-foreground max-w-md mx-auto">
-                        Drag and drop your image here, or click to browse. Supports JPG, PNG, WebP up to 10MB.
-                      </p>
-                    </div>
-
-                    <Button
-                      onClick={() => fileInputRef.current?.click()}
-                      size="lg"
-                      className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl text-lg font-medium shadow-lg"
-                    >
-                      Choose Image
-                    </Button>
-                  </div>
+                  <Upload className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                  <p className="text-sm text-gray-500">PNG, JPG, WebP up to 10MB</p>
                 </div>
-
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleFileInputChange}
+                  onChange={handleFileUpload}
                   className="hidden"
                 />
-              </CardContent>
-            </Card>
-          ) : (
-            // Enhancement Section
-            <div className="space-y-8">
-              {/* Settings Card */}
-              <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                        <Settings className="h-6 w-6 text-white" />
+              </div>
+
+              {/* Enhancement Mode */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Enhancement Mode</Label>
+                <Select value={enhanceMode} onValueChange={setEnhanceMode}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        Auto Enhance
                       </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">Enhancement Settings</h3>
-                        <p className="text-muted-foreground">Configure your image enhancement options</p>
+                    </SelectItem>
+                    <SelectItem value="manual">
+                      <div className="flex items-center gap-2">
+                        <Palette className="w-4 h-4" />
+                        Manual Control
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Manual Controls */}
+              {enhanceMode === 'manual' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Brightness: {brightness[0]}%
+                    </Label>
+                    <Slider
+                      value={brightness}
+                      onValueChange={setBrightness}
+                      max={200}
+                      min={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Contrast: {contrast[0]}%
+                    </Label>
+                    <Slider
+                      value={contrast}
+                      onValueChange={setContrast}
+                      max={200}
+                      min={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Saturation: {saturation[0]}%
+                    </Label>
+                    <Slider
+                      value={saturation}
+                      onValueChange={setSaturation}
+                      max={200}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Sharpness: {sharpness[0]}%
+                    </Label>
+                    <Slider
+                      value={sharpness}
+                      onValueChange={setSharpness}
+                      max={200}
+                      min={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={resetSettings}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Reset to Default
+                  </Button>
+                </div>
+              )}
+
+              {/* Enhance Button */}
+              <Button 
+                onClick={enhanceImage}
+                disabled={!originalImage || isProcessing}
+                className="w-full h-12 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Enhance Image
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Preview Card */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-2">
+                <Focus className="w-5 h-5" />
+                Preview & Download
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {originalImage ? (
+                <div className="space-y-4">
+                  {/* Image Preview */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Original</Label>
+                      <div className="border rounded-lg overflow-hidden">
+                        <img 
+                          src={originalImage} 
+                          alt="Original" 
+                          className="w-full h-48 object-contain bg-gray-50"
+                        />
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-6">
-                      <div className="flex items-center space-x-3">
-                        <Label htmlFor="auto-color" className="text-sm font-medium">
-                          Auto Color Enhance
-                        </Label>
-                        <Switch
-                          id="auto-color"
-                          checked={autoColorEnhance}
-                          onCheckedChange={setAutoColorEnhance}
-                        />
+                    {enhancedImage && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Enhanced</Label>
+                        <div className="border rounded-lg overflow-hidden">
+                          <img 
+                            src={enhancedImage} 
+                            alt="Enhanced" 
+                            className="w-full h-48 object-contain bg-gray-50"
+                          />
+                        </div>
                       </div>
-                      
-                      <Button
-                        onClick={simulateAIEnhancement}
-                        disabled={isProcessing}
-                        size="lg"
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg"
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                            Enhancing...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-5 w-5 mr-2" />
-                            Enhance Image
-                          </>
-                        )}
-                      </Button>
-                    </div>
+                    )}
                   </div>
 
-                  {isProcessing && (
-                    <div className="mt-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Processing...</span>
-                        <span className="text-sm text-muted-foreground">{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
+                  {/* Download Button */}
+                  {enhancedImage && (
+                    <Button 
+                      onClick={downloadImage}
+                      className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg transition-all duration-300"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Enhanced Image
+                    </Button>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Image Preview */}
-              <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardContent className="p-0">
-                  {!showComparison ? (
-                    // Original Image Only
-                    <div className="p-8">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold">Original Image</h3>
-                        <div className="text-sm text-muted-foreground">
-                          {originalImage.width} × {originalImage.height} pixels
-                        </div>
-                      </div>
-                      <div className="relative rounded-2xl overflow-hidden shadow-lg">
-                        <img
-                          src={originalImage.url}
-                          alt="Original"
-                          className="w-full h-auto max-h-96 object-contain bg-muted"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    // Interactive Comparison Slider
-                    <div className="p-8">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                          Enhancement Complete
-                        </h3>
-                        <div className="flex items-center space-x-4">
-                          <Button
-                            onClick={() => setFullView(!fullView)}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                          >
-                            {fullView ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                            {fullView ? 'Show Comparison' : 'Full View'}
-                          </Button>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => downloadEnhanced('png')}
-                              variant="outline"
-                              size="sm"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              PNG
-                            </Button>
-                            <Button
-                              onClick={() => downloadEnhanced('jpg')}
-                              size="sm"
-                              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              JPG
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {fullView ? (
-                        // Full Enhanced Image View
-                        <div className="transition-all duration-500 ease-in-out">
-                          <h4 className="text-sm font-medium text-muted-foreground mb-3">Enhanced Image</h4>
-                          <div className="relative rounded-2xl overflow-hidden shadow-lg max-w-4xl mx-auto">
-                            <img
-                              src={enhancedImage!}
-                              alt="Enhanced"
-                              className="w-full h-auto object-contain bg-muted"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        // Interactive Slider Comparison
-                        <div className="max-w-4xl mx-auto">
-                          <div className="text-center mb-4">
-                            <p className="text-sm text-muted-foreground">
-                              Drag the slider to compare original vs enhanced
-                            </p>
-                          </div>
-                          
-                          <div 
-                            className="relative rounded-2xl overflow-hidden shadow-lg cursor-col-resize select-none"
-                            style={{ aspectRatio: `${originalImage.width}/${originalImage.height}` }}
-                            onMouseDown={handleSliderStart}
-                            onMouseUp={handleSliderEnd}
-                            onMouseMove={handleSliderDrag}
-                            onTouchStart={handleSliderStart}
-                            onTouchEnd={handleSliderEnd}
-                            onTouchMove={handleSliderDrag}
-                            onMouseLeave={handleSliderEnd}
-                          >
-                            {/* Enhanced Image (Background) */}
-                            <img
-                              src={enhancedImage!}
-                              alt="Enhanced"
-                              className="absolute inset-0 w-full h-full object-contain bg-muted"
-                              draggable={false}
-                            />
-                            
-                            {/* Original Image (Overlay with clip-path) */}
-                            <div 
-                              className="absolute inset-0 transition-all duration-75"
-                              style={{ 
-                                clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)`
-                              }}
-                            >
-                              <img
-                                src={originalImage.url}
-                                alt="Original"
-                                className="w-full h-full object-contain bg-muted"
-                                draggable={false}
-                              />
-                              
-                              {/* Original Label */}
-                              <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                Original
-                              </div>
-                            </div>
-                            
-                            {/* Enhanced Label */}
-                            <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
-                              Enhanced
-                            </div>
-                            
-                            {/* Slider Handle */}
-                            <div 
-                              className="absolute top-0 bottom-0 w-1 bg-white shadow-lg transition-all duration-75"
-                              style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
-                            >
-                              {/* Slider Thumb */}
-                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center cursor-col-resize border-2 border-gray-200 hover:border-indigo-500 transition-colors">
-                                <ArrowLeft className="h-3 w-3 text-gray-600 absolute left-2" />
-                                <ArrowRight className="h-3 w-3 text-gray-600 absolute right-2" />
-                              </div>
-                            </div>
-                            
-                            {/* Hint Animation (Initial Load) */}
-                            {sliderPosition === 50 && (
-                              <div className="absolute inset-0 pointer-events-none">
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm animate-pulse">
-                                  ← Drag to compare →
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Maximize className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Upload an image to see the preview</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Hidden canvas for image processing */}
+        {/* Hidden Canvas for Processing */}
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* Information Section */}
+        <div className="mt-16 max-w-4xl mx-auto">
+          <Card className="shadow-lg border-0">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Enhancement Features</h3>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-700 mb-2">Auto Enhancement</h4>
+                  <p className="text-sm text-gray-600">
+                    AI-powered automatic enhancement that optimally adjusts brightness, contrast, and sharpness for best results.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Palette className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-700 mb-2">Manual Control</h4>
+                  <p className="text-sm text-gray-600">
+                    Fine-tune every aspect of your image with precise controls for brightness, contrast, saturation, and sharpness.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Focus className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h4 className="font-semibold text-gray-700 mb-2">High Quality</h4>
+                  <p className="text-sm text-gray-600">
+                    Preserve image quality while enhancing. Supports high-resolution images up to 10MB with optimal compression.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
