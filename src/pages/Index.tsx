@@ -75,6 +75,18 @@ const Index = () => {
       iconBg: 'bg-indigo-100',
       iconColor: 'text-indigo-600',
       hoverColor: 'hover:from-indigo-600 hover:to-purple-700'
+    },
+    {
+      id: 'sip-calculator',
+      title: 'SIP Calculator',
+      description: 'Calculate future value of your Systematic Investment Plan with compound interest',
+      icon: TrendingUp,
+      path: '/sip-calculator',
+      gradient: 'from-emerald-500 to-green-600',
+      bgGradient: 'from-emerald-50 to-green-100',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      hoverColor: 'hover:from-emerald-600 hover:to-green-700'
     }
   ];
 

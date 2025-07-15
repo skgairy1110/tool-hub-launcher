@@ -12,6 +12,7 @@ import PdfToPptConverter from "./pages/PdfToPptConverter";
 import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
 import ImageEnhancePro from "./pages/ImageEnhancePro";
+import SipCalculator from "./pages/SipCalculator";
 
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/case-converter" element={<CaseConverter />} />
           <Route path="/chart-generator" element={<ChartGenerator />} />
           <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
+          <Route path="/sip-calculator" element={<SipCalculator />} />
           
           
           
