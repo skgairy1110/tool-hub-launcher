@@ -12,15 +12,6 @@ import PdfToPptConverter from "./pages/PdfToPptConverter";
 import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
 import ImageEnhancePro from "./pages/ImageEnhancePro";
-import SipCalculator from "./pages/SipCalculator";
-import EmiCalculator from "./pages/EmiCalculator";
-import FdCalculator from "./pages/FdCalculator";
-import IncomeTaxCalculator from "./pages/IncomeTaxCalculator";
-import PpfCalculator from "./pages/PpfCalculator";
-import RdCalculator from "./pages/RdCalculator";
-import CompoundInterestCalculator from "./pages/CompoundInterestCalculator";
-import RetirementCalculator from "./pages/RetirementCalculator";
-import InflationCalculator from "./pages/InflationCalculator";
 
 import NotFound from "./pages/NotFound";
 
@@ -41,15 +32,6 @@ const App = () => (
           <Route path="/case-converter" element={<CaseConverter />} />
           <Route path="/chart-generator" element={<ChartGenerator />} />
           <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
-        <Route path="/sip-calculator" element={<SipCalculator />} />
-        <Route path="/emi-calculator" element={<EmiCalculator />} />
-        <Route path="/fd-calculator" element={<FdCalculator />} />
-        <Route path="/income-tax-calculator" element={<IncomeTaxCalculator />} />
-        <Route path="/ppf-calculator" element={<PpfCalculator />} />
-        <Route path="/rd-calculator" element={<RdCalculator />} />
-        <Route path="/compound-interest-calculator" element={<CompoundInterestCalculator />} />
-        <Route path="/retirement-calculator" element={<RetirementCalculator />} />
-        <Route path="/inflation-calculator" element={<InflationCalculator />} />
           
           
           
