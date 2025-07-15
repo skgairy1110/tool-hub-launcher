@@ -1,93 +1,98 @@
 import { Link } from "react-router-dom";
-import { QrCode, FileText, ArrowRight, ImageIcon, Type, BarChart3, Sparkles, Video } from "lucide-react";
+import { Calculator, PiggyBank, Receipt, TrendingUp, Wallet, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
-  const tools = [
+  const toolCategories = [
     {
-      id: 'qr-generator',
-      title: 'QR Code Generator',
-      description: 'Generate QR codes instantly from any text or URL',
-      icon: QrCode,
-      path: '/qr-generator',
-      gradient: 'from-blue-500 to-indigo-600',
-      bgGradient: 'from-blue-50 to-indigo-100',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      hoverColor: 'hover:from-blue-600 hover:to-indigo-700'
-    },
-    {
-      id: 'image-to-text',
-      title: 'Image to Text Converter',
-      description: 'Extract text from images using advanced OCR technology',
-      icon: FileText,
-      path: '/image-to-text',
+      id: 'interest-calculators',
+      title: 'Interest Calculators',
+      description: 'Calculate returns on FD, RD, PPF, SIP, Mutual Funds & more investment options',
+      icon: TrendingUp,
       gradient: 'from-green-500 to-emerald-600',
       bgGradient: 'from-green-50 to-emerald-100',
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
-      hoverColor: 'hover:from-green-600 hover:to-emerald-700'
+      hoverColor: 'hover:from-green-600 hover:to-emerald-700',
+      tools: [
+        { name: 'FD Calculator', path: '/fd-calculator' },
+        { name: 'RD Calculator', path: '/rd-calculator' },
+        { name: 'PPF Calculator', path: '/ppf-calculator' },
+        { name: 'Compound Interest Calculator', path: '/compound-interest' },
+        { name: 'Lumpsum Investment Calculator', path: '/lumpsum-calculator' },
+        { name: 'SIP Calculator', path: '/sip-calculator' },
+        { name: 'Gold Investment Calculator', path: '/gold-calculator' },
+        { name: 'Mutual Fund Returns Calculator', path: '/mutual-fund-calculator' }
+      ]
     },
     {
-      id: 'image-compressor',
-      title: 'Image Compressor',
-      description: 'Compress JPG, PNG, WebP images with customizable quality settings',
-      icon: ImageIcon,
-      path: '/image-compressor',
+      id: 'loan-calculators',
+      title: 'Loan Calculators',
+      description: 'Plan EMIs for home, personal, car, education loans & calculate gratuity',
+      icon: Calculator,
+      gradient: 'from-blue-500 to-indigo-600',
+      bgGradient: 'from-blue-50 to-indigo-100',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      hoverColor: 'hover:from-blue-600 hover:to-indigo-700',
+      tools: [
+        { name: 'Home Loan Calculator', path: '/home-loan-calculator' },
+        { name: 'Personal Loan Calculator', path: '/personal-loan-calculator' },
+        { name: 'Car Loan Calculator', path: '/car-loan-calculator' },
+        { name: 'Education Loan Calculator', path: '/education-loan-calculator' },
+        { name: 'NPS Calculator', path: '/nps-calculator' },
+        { name: 'EMI Calculator', path: '/emi-calculator' },
+        { name: 'Gratuity Calculator', path: '/gratuity-calculator' }
+      ]
+    },
+    {
+      id: 'tax-calculators',
+      title: 'Tax Calculators',
+      description: 'Calculate income tax, capital gains tax, and HRA exemptions accurately',
+      icon: Receipt,
       gradient: 'from-purple-500 to-violet-600',
       bgGradient: 'from-purple-50 to-violet-100',
       iconBg: 'bg-purple-100',
       iconColor: 'text-purple-600',
-      hoverColor: 'hover:from-purple-600 hover:to-violet-700'
+      hoverColor: 'hover:from-purple-600 hover:to-violet-700',
+      tools: [
+        { name: 'Income Tax Calculator', path: '/income-tax-calculator' },
+        { name: 'Capital Gains Tax Calculator', path: '/capital-gains-calculator' },
+        { name: 'HRA Calculator', path: '/hra-calculator' }
+      ]
     },
     {
-      id: 'case-converter',
-      title: 'Text Case Converter',
-      description: 'Convert text between different cases: uppercase, lowercase, title case, and more',
-      icon: Type,
-      path: '/case-converter',
+      id: 'retirement-planning',
+      title: 'Retirement & Future Planning',
+      description: 'Plan for retirement, education costs, and understand inflation impact',
+      icon: PiggyBank,
       gradient: 'from-orange-500 to-red-600',
       bgGradient: 'from-orange-50 to-red-100',
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
-      hoverColor: 'hover:from-orange-600 hover:to-red-700'
+      hoverColor: 'hover:from-orange-600 hover:to-red-700',
+      tools: [
+        { name: 'Retirement Calculator', path: '/retirement-calculator' },
+        { name: "Children's Education Planner", path: '/education-planner' },
+        { name: 'Inflation Calculator', path: '/inflation-calculator' }
+      ]
     },
     {
-      id: 'chart-generator',
-      title: 'Chart Generator',
-      description: 'Create beautiful charts and graphs with customizable options and export as SVG or PNG',
-      icon: BarChart3,
-      path: '/chart-generator',
+      id: 'other-tools',
+      title: 'Other Useful Tools',
+      description: 'Budget planning, currency conversion, and health insurance calculators',
+      icon: Wallet,
       gradient: 'from-teal-500 to-cyan-600',
       bgGradient: 'from-teal-50 to-cyan-100',
       iconBg: 'bg-teal-100',
       iconColor: 'text-teal-600',
-      hoverColor: 'hover:from-teal-600 hover:to-cyan-700'
-    },
-    {
-      id: 'image-enhance-pro',
-      title: 'Image Enhance Pro',
-      description: 'AI-powered image enhancement: sharpen, denoise, upscale up to 4x, and auto color correction',
-      icon: Sparkles,
-      path: '/image-enhance-pro',
-      gradient: 'from-indigo-500 to-purple-600',
-      bgGradient: 'from-indigo-50 to-purple-100',
-      iconBg: 'bg-indigo-100',
-      iconColor: 'text-indigo-600',
-      hoverColor: 'hover:from-indigo-600 hover:to-purple-700'
-    },
-    {
-      id: 'instagram-downloader',
-      title: 'Instagram Video Downloader',
-      description: 'Download Instagram videos, reels, and stories in high quality with just a URL',
-      icon: Video,
-      path: '/instagram-downloader',
-      gradient: 'from-pink-500 to-rose-600',
-      bgGradient: 'from-pink-50 to-rose-100',
-      iconBg: 'bg-pink-100',
-      iconColor: 'text-pink-600',
-      hoverColor: 'hover:from-pink-600 hover:to-rose-700'
-    },
+      hoverColor: 'hover:from-teal-600 hover:to-cyan-700',
+      tools: [
+        { name: 'Budget Planner', path: '/budget-planner' },
+        { name: 'Currency Converter', path: '/currency-converter' },
+        { name: 'Health Insurance Premium Calculator', path: '/health-insurance-calculator' }
+      ]
+    }
   ];
 
   return (
@@ -96,10 +101,10 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
-            Digital Tools Hub
+            Financial Calculator Hub
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Powerful, easy-to-use tools for your digital needs. Generate QR codes, convert images to text, and more - all in one place.
+            Complete suite of financial calculators for smart money planning. Calculate EMIs, investments, taxes, and plan your financial future.
           </p>
           <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -107,70 +112,84 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Tools Grid */}
+        {/* Calculator Categories Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {tools.map((tool) => {
-            const IconComponent = tool.icon;
+          {toolCategories.map((category) => {
+            const IconComponent = category.icon;
             return (
-              <Link key={tool.id} to={tool.path} className="group">
-                <Card className="h-full transition-all duration-300 hover:shadow-2xl hover:scale-105 border-0 shadow-lg overflow-hidden">
-                  <div className={`h-2 bg-gradient-to-r ${tool.gradient}`}></div>
-                  <CardContent className="p-8">
-                    <div className="flex items-start space-x-4 mb-6">
-                      <div className={`${tool.iconBg} p-3 rounded-xl`}>
-                        <IconComponent className={`h-8 w-8 ${tool.iconColor}`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
-                          {tool.title}
-                        </h3>
-                        <p className="text-gray-600 leading-relaxed">
-                          {tool.description}
-                        </p>
+              <Card key={category.id} className="h-full transition-all duration-300 hover:shadow-2xl hover:scale-105 border-0 shadow-lg overflow-hidden group">
+                <div className={`h-2 bg-gradient-to-r ${category.gradient}`}></div>
+                <CardContent className="p-8">
+                  <div className="flex items-start space-x-4 mb-6">
+                    <div className={`${category.iconBg} p-3 rounded-xl`}>
+                      <IconComponent className={`h-8 w-8 ${category.iconColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
+                        {category.title}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed mb-4">
+                        {category.description}
+                      </p>
+                      
+                      {/* Tools List */}
+                      <div className="space-y-2">
+                        {category.tools.map((tool, index) => (
+                          <Link 
+                            key={index} 
+                            to={tool.path}
+                            className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors group/tool"
+                          >
+                            <span className="text-sm text-gray-700 group-hover/tool:text-gray-900">
+                              {tool.name}
+                            </span>
+                            <ArrowRight className="h-4 w-4 text-gray-400 group-hover/tool:text-gray-600 transform group-hover/tool:translate-x-1 transition-all" />
+                          </Link>
+                        ))}
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                        <span className="text-sm text-gray-500">Ready to use</span>
-                      </div>
-                      <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${tool.gradient} ${tool.hoverColor} text-white rounded-lg transition-all duration-300 group-hover:shadow-lg`}>
-                        <span className="text-sm font-medium">Try Now</span>
-                        <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
-                      </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                      <span className="text-sm text-gray-500">{category.tools.length} calculators</span>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    <div className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${category.gradient} ${category.hoverColor} text-white rounded-lg transition-all duration-300 group-hover:shadow-lg`}>
+                      <span className="text-sm font-medium">Explore All</span>
+                      <ArrowRight className="ml-2 h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
 
         {/* Features Section */}
         <div className="mt-20 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">Why Choose Our Tools?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Why Choose Our Financial Calculators?</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="p-6">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 bg-purple-600 rounded-full"></div>
+                <Calculator className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Fast & Reliable</h3>
-              <p className="text-gray-600 text-sm">Lightning-fast processing with reliable results every time.</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Accurate & Updated</h3>
+              <p className="text-gray-600 text-sm">Latest tax slabs, interest rates, and financial formulas for precise calculations.</p>
             </div>
             <div className="p-6">
               <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 bg-pink-600 rounded-full"></div>
+                <TrendingUp className="w-6 h-6 text-pink-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">No Registration</h3>
-              <p className="text-gray-600 text-sm">Use all tools instantly without any sign-up or registration.</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Smart Planning</h3>
+              <p className="text-gray-600 text-sm">Make informed financial decisions with detailed breakdowns and projections.</p>
             </div>
             <div className="p-6">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 bg-blue-600 rounded-full"></div>
+                <PiggyBank className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Privacy First</h3>
-              <p className="text-gray-600 text-sm">Your data stays secure and private. We don't store your files.</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Complete Suite</h3>
+              <p className="text-gray-600 text-sm">Everything you need for financial planning in one comprehensive platform.</p>
             </div>
           </div>
         </div>
