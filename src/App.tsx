@@ -24,7 +24,7 @@ import InflationCalculator from "./pages/InflationCalculator";
 
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient(); // Fixed import issues
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
