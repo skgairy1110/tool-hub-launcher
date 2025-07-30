@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calculator, PiggyBank, Receipt, TrendingUp, Wallet, ArrowRight, QrCode, FileText, ImageIcon, Type, BarChart3, Sparkles } from "lucide-react";
+import { Calculator, PiggyBank, Receipt, TrendingUp, Wallet, ArrowRight, QrCode, FileText, ImageIcon, Type, BarChart3, Sparkles, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -87,6 +87,18 @@ const Index = () => {
       iconBg: 'bg-emerald-100',
       iconColor: 'text-emerald-600',
       hoverColor: 'hover:from-emerald-600 hover:to-green-700'
+    },
+    {
+      id: 'youtube-thumbnail-downloader',
+      title: 'YouTube Thumbnail Downloader',
+      description: 'Download high-quality YouTube thumbnails in multiple resolutions instantly',
+      icon: Download,
+      path: '/youtube-thumbnail-downloader',
+      gradient: 'from-red-500 to-pink-600',
+      bgGradient: 'from-red-50 to-pink-100',
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      hoverColor: 'hover:from-red-600 hover:to-pink-700'
     }
   ];
 

@@ -13,6 +13,7 @@ import CaseConverter from "./pages/CaseConverter";
 import ChartGenerator from "./pages/ChartGenerator";
 import ImageEnhancePro from "./pages/ImageEnhancePro";
 import SipCalculator from "./pages/SipCalculator";
+import YoutubeThumbnailDownloader from "./pages/YoutubeThumbnailDownloader";
 
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/chart-generator" element={<ChartGenerator />} />
           <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
           <Route path="/sip-calculator" element={<SipCalculator />} />
+          <Route path="/youtube-thumbnail-downloader" element={<YoutubeThumbnailDownloader />} />
           
           
           
