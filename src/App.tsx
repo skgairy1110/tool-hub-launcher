@@ -14,6 +14,7 @@ import ChartGenerator from "./pages/ChartGenerator";
 import ImageEnhancePro from "./pages/ImageEnhancePro";
 import SipCalculator from "./pages/SipCalculator";
 import YoutubeThumbnailDownloader from "./pages/YoutubeThumbnailDownloader";
+import ColorGenie from "./pages/ColorGenie";
 
 
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/image-enhance-pro" element={<ImageEnhancePro />} />
           <Route path="/sip-calculator" element={<SipCalculator />} />
           <Route path="/youtube-thumbnail-downloader" element={<YoutubeThumbnailDownloader />} />
+          <Route path="/color-genie" element={<ColorGenie />} />
           
           
           
