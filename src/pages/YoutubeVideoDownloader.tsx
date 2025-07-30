@@ -60,22 +60,53 @@ const YoutubeVideoDownloader = () => {
     }
   };
 
-  const downloadVideo = () => {
+  const downloadVideo = async () => {
     if (!videoInfo) return;
 
-    const videoId = extractVideoId(youtubeUrl);
-    if (!videoId) return;
+    try {
+      toast({
+        title: "Starting Download",
+        description: "Processing video download...",
+      });
 
-    // Use a third-party service for actual downloading
-    const downloadUrl = `https://www.y2mate.com/youtube/${videoId}`;
-    
-    // Open in new tab for user to complete download
-    window.open(downloadUrl, '_blank');
-    
-    toast({
-      title: "Redirecting to Download Service",
-      description: `Opening download page for ${selectedFormat} format. Complete the download on the service page.`,
-    });
+      const response = await fetch('/api/download-youtube', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoUrl: youtubeUrl,
+          format: selectedFormat
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `${videoInfo.title}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Complete",
+        description: "Video has been downloaded successfully!",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: "Unable to download video. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatOptions = [
@@ -196,64 +227,7 @@ const YoutubeVideoDownloader = () => {
                       size="lg"
                     >
                       <Download className="w-5 h-5 mr-2" />
-                      Download via Y2Mate
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => {
-                        const videoId = extractVideoId(youtubeUrl);
-                        if (videoId) {
-                          window.open(`https://ssyoutube.com/watch?v=${videoId}`, '_blank');
-                          toast({
-                            title: "Alternative Download Service",
-                            description: "Opening SSYouTube for download options",
-                          });
-                        }
-                      }}
-                      variant="outline"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Download className="w-5 h-5 mr-2" />
-                      Download via SSYouTube
-                    </Button>
-
-                    <Button 
-                      onClick={() => {
-                        const videoId = extractVideoId(youtubeUrl);
-                        if (videoId) {
-                          window.open(`https://savefrom.net/1-youtube-video-downloader-v2/?url=https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                          toast({
-                            title: "SaveFrom Download Service",
-                            description: "Opening SaveFrom.net for download options",
-                          });
-                        }
-                      }}
-                      variant="outline"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Download className="w-5 h-5 mr-2" />
-                      Download via SaveFrom.net
-                    </Button>
-
-                    <Button 
-                      onClick={() => {
-                        const videoId = extractVideoId(youtubeUrl);
-                        if (videoId) {
-                          window.open(`https://www.9xbuddy.com/process?url=https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                          toast({
-                            title: "9xBuddy Download Service",
-                            description: "Opening 9xBuddy for download options",
-                          });
-                        }
-                      }}
-                      variant="outline"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Download className="w-5 h-5 mr-2" />
-                      Download via 9xBuddy
+                      Download Video
                     </Button>
                   </div>
                 </div>
