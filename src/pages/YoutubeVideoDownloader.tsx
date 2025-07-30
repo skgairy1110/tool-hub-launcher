@@ -19,7 +19,7 @@ const YoutubeVideoDownloader = () => {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const getVideoInfo = () => {
+  const getVideoInfo = async () => {
     const id = extractVideoId(youtubeUrl);
     if (!id) {
       toast({
@@ -30,27 +30,51 @@ const YoutubeVideoDownloader = () => {
       return;
     }
 
-    // Simulate getting video info (in real implementation, you'd use YouTube API)
-    setVideoInfo({
-      title: "Sample Video Title",
-      duration: "10:30",
-      thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-    });
+    try {
+      // Try to get video title from OpenGraph data
+      const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+      const data = await response.json();
+      
+      setVideoInfo({
+        title: data.title || "YouTube Video",
+        duration: "Duration varies",
+        thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+      });
 
-    toast({
-      title: "Video Found",
-      description: "Video information loaded successfully",
-    });
+      toast({
+        title: "Video Found",
+        description: "Video information loaded successfully",
+      });
+    } catch (error) {
+      // Fallback if API fails
+      setVideoInfo({
+        title: "YouTube Video",
+        duration: "Duration varies", 
+        thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+      });
+
+      toast({
+        title: "Video Found",
+        description: "Video ready for download",
+      });
+    }
   };
 
   const downloadVideo = () => {
     if (!videoInfo) return;
 
-    // Note: This is a UI simulation. Actual downloading would require a backend service
-    // that complies with YouTube's Terms of Service and copyright laws
+    const videoId = extractVideoId(youtubeUrl);
+    if (!videoId) return;
+
+    // Use a third-party service for actual downloading
+    const downloadUrl = `https://www.y2mate.com/youtube/${videoId}`;
+    
+    // Open in new tab for user to complete download
+    window.open(downloadUrl, '_blank');
+    
     toast({
-      title: "Download Started",
-      description: `Downloading video in ${selectedFormat} format. Please note: This is a demonstration interface.`,
+      title: "Redirecting to Download Service",
+      description: `Opening download page for ${selectedFormat} format. Complete the download on the service page.`,
     });
   };
 
@@ -165,14 +189,35 @@ const YoutubeVideoDownloader = () => {
                     </Select>
                   </div>
 
-                  <Button 
-                    onClick={downloadVideo}
-                    className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-                    size="lg"
-                  >
-                    <Download className="w-5 h-5 mr-2" />
-                    Download Video
-                  </Button>
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={downloadVideo}
+                      className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      Download via Y2Mate
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => {
+                        const videoId = extractVideoId(youtubeUrl);
+                        if (videoId) {
+                          window.open(`https://ssyoutube.com/watch?v=${videoId}`, '_blank');
+                          toast({
+                            title: "Alternative Download Service",
+                            description: "Opening SSYouTube for download options",
+                          });
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      Download via SSYouTube
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
