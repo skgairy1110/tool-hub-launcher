@@ -69,7 +69,8 @@ const YoutubeVideoDownloader = () => {
         description: "Processing video download...",
       });
 
-      const response = await fetch('/api/download-youtube', {
+      // Try the Supabase function first
+      const response = await fetch('/functions/v1/download-youtube', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,32 +81,79 @@ const YoutubeVideoDownloader = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Download failed');
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType?.includes('application/json')) {
+          // If we get JSON, it means direct download isn't available
+          const data = await response.json();
+          if (data.downloadUrls) {
+            // Open the first download service in a new tab
+            window.open(data.downloadUrls[0], '_blank');
+            toast({
+              title: "Download Service Opened",
+              description: "Please use the opened download service to get your video.",
+            });
+            return;
+          }
+        } else {
+          // Direct download available
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `${videoInfo.title}.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          toast({
+            title: "Download Complete",
+            description: "Video has been downloaded successfully!",
+          });
+          return;
+        }
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${videoInfo.title}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Fallback to download services
+      const videoId = extractVideoId(youtubeUrl);
+      if (videoId) {
+        const downloadServices = [
+          `https://y2mate.com/youtube/${videoId}`,
+          `https://ssyoutube.com/watch?v=${videoId}`,
+          `https://savefrom.net/#url=${encodeURIComponent(youtubeUrl)}`
+        ];
+        
+        // Open the first service
+        window.open(downloadServices[0], '_blank');
+        
+        toast({
+          title: "Download Service Opened",
+          description: "Please use the opened download service to get your video.",
+        });
+      }
 
-      toast({
-        title: "Download Complete",
-        description: "Video has been downloaded successfully!",
-      });
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: "Download Failed",
-        description: "Unable to download video. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Fallback to external download services
+      const videoId = extractVideoId(youtubeUrl);
+      if (videoId) {
+        window.open(`https://y2mate.com/youtube/${videoId}`, '_blank');
+        toast({
+          title: "Download Service Opened",
+          description: "Direct download failed. Please use the opened service.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Download Failed", 
+          description: "Unable to download video. Please check the URL.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

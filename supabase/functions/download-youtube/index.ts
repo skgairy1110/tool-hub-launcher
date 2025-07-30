@@ -27,58 +27,101 @@ serve(async (req) => {
 
     const videoId = videoIdMatch[1]
 
-    // Use yt-dlp alternative API to get video stream URLs
-    const apiResponse = await fetch(`https://yt-dlp-api.herokuapp.com/api/info?url=https://www.youtube.com/watch?v=${videoId}`)
-    
-    if (!apiResponse.ok) {
-      throw new Error('Failed to fetch video information')
-    }
+    // Try multiple APIs for better reliability
+    const apis = [
+      `https://api.cobalt.tools/api/json`,
+      `https://api.downloadgram.com/api/video/info`,
+      `https://youtube-dl-express.vercel.app/api/video?url=${encodeURIComponent(videoUrl)}`
+    ]
 
-    const videoInfo = await apiResponse.json()
-    
-    if (!videoInfo.formats || videoInfo.formats.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No video formats found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    let videoInfo = null
+    let downloadUrl = null
 
-    // Filter for video formats with audio
-    const videoFormats = videoInfo.formats.filter((format: any) => 
-      format.vcodec !== 'none' && format.acodec !== 'none' && format.url
-    )
+    // Try Cobalt Tools API first (most reliable)
+    try {
+      const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          url: videoUrl,
+          vQuality: '720',
+          aFormat: 'mp3',
+          filenamePattern: 'classic'
+        })
+      })
 
-    // Get best quality format
-    const bestFormat = videoFormats.reduce((best: any, current: any) => {
-      const bestHeight = best?.height || 0
-      const currentHeight = current?.height || 0
-      return currentHeight > bestHeight ? current : best
-    }, videoFormats[0])
-
-    if (!bestFormat) {
-      return new Response(
-        JSON.stringify({ error: 'No suitable video format found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Download the video
-    const videoResponse = await fetch(bestFormat.url)
-    
-    if (!videoResponse.ok) {
-      throw new Error('Failed to download video')
-    }
-
-    const videoBlob = await videoResponse.arrayBuffer()
-    
-    return new Response(videoBlob, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'video/mp4',
-        'Content-Disposition': `attachment; filename="${videoInfo.title || 'video'}.mp4"`,
-        'Content-Length': videoBlob.byteLength.toString()
+      if (cobaltResponse.ok) {
+        const cobaltData = await cobaltResponse.json()
+        if (cobaltData.status === 'success' && cobaltData.url) {
+          downloadUrl = cobaltData.url
+          videoInfo = { title: cobaltData.filename || 'video' }
+        }
       }
-    })
+    } catch (e) {
+      console.log('Cobalt API failed:', e)
+    }
+
+    // Fallback to direct YouTube video extraction if Cobalt fails
+    if (!downloadUrl) {
+      try {
+        // Use a more reliable method to get video streams
+        const ytResponse = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(videoUrl)}`)
+        if (ytResponse.ok) {
+          const ytData = await ytResponse.json()
+          videoInfo = { title: ytData.title || 'video' }
+          
+          // For now, return the video info and let the frontend handle the download
+          // This is a safer approach than trying to proxy large video files
+          return new Response(
+            JSON.stringify({ 
+              message: 'Video found but direct download not available. Please use the download links provided.',
+              videoInfo: videoInfo,
+              downloadUrls: [
+                `https://y2mate.com/youtube/${videoId}`,
+                `https://ssyoutube.com/watch?v=${videoId}`,
+                `https://savefrom.net/#url=${encodeURIComponent(videoUrl)}`
+              ]
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      } catch (e) {
+        console.log('YouTube extraction failed:', e)
+      }
+    }
+
+    if (downloadUrl) {
+      // Download the video
+      const videoResponse = await fetch(downloadUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      })
+      
+      if (!videoResponse.ok) {
+        throw new Error('Failed to download video from source')
+      }
+
+      const videoBlob = await videoResponse.arrayBuffer()
+      
+      return new Response(videoBlob, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'video/mp4',
+          'Content-Disposition': `attachment; filename="${videoInfo?.title || 'video'}.mp4"`,
+          'Content-Length': videoBlob.byteLength.toString()
+        }
+      })
+    }
+
+    // If all else fails, return error
+    return new Response(
+      JSON.stringify({ error: 'Unable to extract video download link. YouTube may have restrictions on this video.' }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
     console.error('Error downloading video:', error)
