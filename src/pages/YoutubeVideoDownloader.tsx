@@ -217,6 +217,44 @@ const YoutubeVideoDownloader = () => {
                       <Download className="w-5 h-5 mr-2" />
                       Download via SSYouTube
                     </Button>
+
+                    <Button 
+                      onClick={() => {
+                        const videoId = extractVideoId(youtubeUrl);
+                        if (videoId) {
+                          window.open(`https://savefrom.net/1-youtube-video-downloader-v2/?url=https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                          toast({
+                            title: "SaveFrom Download Service",
+                            description: "Opening SaveFrom.net for download options",
+                          });
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      Download via SaveFrom.net
+                    </Button>
+
+                    <Button 
+                      onClick={() => {
+                        const videoId = extractVideoId(youtubeUrl);
+                        if (videoId) {
+                          window.open(`https://www.9xbuddy.com/process?url=https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                          toast({
+                            title: "9xBuddy Download Service",
+                            description: "Opening 9xBuddy for download options",
+                          });
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      Download via 9xBuddy
+                    </Button>
                   </div>
                 </div>
               </CardContent>
