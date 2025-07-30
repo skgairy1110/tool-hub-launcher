@@ -268,15 +268,48 @@ const YoutubeVideoDownloader = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-6">
                     <Button 
                       onClick={downloadVideo}
                       className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
                       size="lg"
                     >
                       <Download className="w-5 h-5 mr-2" />
-                      Download Video
+                      Try Direct Download
                     </Button>
+
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <h4 className="font-semibold text-lg mb-2">Alternative Download Services</h4>
+                        <p className="text-sm text-muted-foreground">
+                          If direct download doesn't work, try these reliable services
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { name: "Y2mate", url: `https://y2mate.com/youtube/${extractVideoId(youtubeUrl)}`, color: "bg-blue-500 hover:bg-blue-600" },
+                          { name: "SaveFrom", url: `https://savefrom.net/#url=${encodeURIComponent(youtubeUrl)}`, color: "bg-green-500 hover:bg-green-600" },
+                          { name: "KeepVid", url: `https://keepvid.com/?url=${encodeURIComponent(youtubeUrl)}`, color: "bg-purple-500 hover:bg-purple-600" },
+                          { name: "YTMate", url: `https://ytmate.com/en/youtube-downloader/${extractVideoId(youtubeUrl)}`, color: "bg-indigo-500 hover:bg-indigo-600" },
+                          { name: "9xBuddy", url: `https://9xbuddy.com/process?url=${encodeURIComponent(youtubeUrl)}`, color: "bg-pink-500 hover:bg-pink-600" },
+                          { name: "VideoGrab", url: `https://videograbber.net/youtube-downloader?url=${encodeURIComponent(youtubeUrl)}`, color: "bg-teal-500 hover:bg-teal-600" },
+                          { name: "ClipGrab", url: `https://clipgrab.org/`, color: "bg-orange-500 hover:bg-orange-600" },
+                          { name: "YT1s", url: `https://yt1s.com/youtube-to-mp4/${extractVideoId(youtubeUrl)}`, color: "bg-red-500 hover:bg-red-600" },
+                          { name: "Converto", url: `https://converto.io/youtube-converter/?url=${encodeURIComponent(youtubeUrl)}`, color: "bg-cyan-500 hover:bg-cyan-600" }
+                        ].map((service, index) => (
+                          <Button
+                            key={index}
+                            onClick={() => window.open(service.url, '_blank')}
+                            className={`${service.color} text-white text-xs px-3 py-2 h-auto min-h-[3rem] flex flex-col items-center justify-center gap-1`}
+                            size="sm"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span className="text-center leading-tight">{service.name}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
