@@ -100,18 +100,6 @@ const Index = () => {
       iconColor: 'text-red-600',
       hoverColor: 'hover:from-red-600 hover:to-pink-700'
     },
-    {
-      id: 'youtube-video-downloader',
-      title: 'YouTube Video Downloader',
-      description: 'Download YouTube videos in various formats and quality options',
-      icon: Video,
-      path: '/youtube-video-downloader',
-      gradient: 'from-red-600 to-orange-600',
-      bgGradient: 'from-red-50 to-orange-100',
-      iconBg: 'bg-red-100',
-      iconColor: 'text-red-600',
-      hoverColor: 'hover:from-red-700 hover:to-orange-700'
-    }
   ];
 
   return (
