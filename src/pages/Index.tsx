@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calculator, PiggyBank, Receipt, TrendingUp, Wallet, ArrowRight, QrCode, FileText, ImageIcon, Type, BarChart3, Sparkles, Download, Palette } from "lucide-react";
+import { Calculator, PiggyBank, Receipt, TrendingUp, Wallet, ArrowRight, QrCode, FileText, ImageIcon, Type, BarChart3, Sparkles, Download, Palette, Instagram } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
@@ -111,6 +111,18 @@ const Index = () => {
       iconBg: 'bg-violet-100',
       iconColor: 'text-violet-600',
       hoverColor: 'hover:from-violet-600 hover:to-pink-600'
+    },
+    {
+      id: 'insta-reel-saver',
+      title: 'Insta Reel Saver',
+      description: 'Download Instagram Reels with thumbnail and caption extraction',
+      icon: Instagram,
+      path: '/insta-reel-saver',
+      gradient: 'from-pink-500 to-rose-600',
+      bgGradient: 'from-pink-50 to-rose-100',
+      iconBg: 'bg-pink-100',
+      iconColor: 'text-pink-600',
+      hoverColor: 'hover:from-pink-600 hover:to-rose-700'
     },
   ];
 
