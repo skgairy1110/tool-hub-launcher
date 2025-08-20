@@ -72,8 +72,8 @@ const ColorGenie = () => {
     const img = new Image();
     
     img.onload = () => {
-      // Set canvas size
-      const maxSize = 400;
+      // Set canvas size for better color analysis
+      const maxSize = 300;
       let { width, height } = img;
       
       if (width > height) {
@@ -98,37 +98,78 @@ const ColorGenie = () => {
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
         
-        // Extract colors using a simple sampling method
+        // Improved color extraction with quantization
         const colorMap = new Map<string, number>();
-        const sampleRate = 4; // Sample every 4th pixel
+        const quantizationFactor = 8; // Reduce color precision for better grouping
         
-        for (let i = 0; i < data.length; i += 4 * sampleRate) {
+        // Sample pixels more strategically
+        for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const alpha = data[i + 3];
           
-          // Skip transparent pixels
-          if (alpha < 128) continue;
+          // Skip transparent or very dark/light pixels
+          if (alpha < 200) continue;
           
-          // Convert to hex
-          const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+          // Quantize colors to group similar ones
+          const quantizedR = Math.round(r / quantizationFactor) * quantizationFactor;
+          const quantizedG = Math.round(g / quantizationFactor) * quantizationFactor;
+          const quantizedB = Math.round(b / quantizationFactor) * quantizationFactor;
+          
+          // Skip very dark or very light colors
+          const brightness = (quantizedR + quantizedG + quantizedB) / 3;
+          if (brightness < 30 || brightness > 225) continue;
+          
+          // Convert to hex with proper padding
+          const hex = `#${quantizedR.toString(16).padStart(2, '0')}${quantizedG.toString(16).padStart(2, '0')}${quantizedB.toString(16).padStart(2, '0')}`.toUpperCase();
           
           colorMap.set(hex, (colorMap.get(hex) || 0) + 1);
         }
         
-        // Get the most frequent colors
+        // Get diverse colors by filtering out similar ones
         const sortedColors = Array.from(colorMap.entries())
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 6)
           .map(([color]) => color);
         
-        setImageColors(sortedColors);
+        // Filter for color diversity
+        const diverseColors: string[] = [];
+        const minColorDistance = 80; // Minimum RGB distance between colors
+        
+        for (const color of sortedColors) {
+          if (diverseColors.length >= 6) break;
+          
+          const r1 = parseInt(color.slice(1, 3), 16);
+          const g1 = parseInt(color.slice(3, 5), 16);
+          const b1 = parseInt(color.slice(5, 7), 16);
+          
+          let isDiverse = true;
+          for (const existingColor of diverseColors) {
+            const r2 = parseInt(existingColor.slice(1, 3), 16);
+            const g2 = parseInt(existingColor.slice(3, 5), 16);
+            const b2 = parseInt(existingColor.slice(5, 7), 16);
+            
+            const distance = Math.sqrt(
+              Math.pow(r1 - r2, 2) + Math.pow(g1 - g2, 2) + Math.pow(b1 - b2, 2)
+            );
+            
+            if (distance < minColorDistance) {
+              isDiverse = false;
+              break;
+            }
+          }
+          
+          if (isDiverse) {
+            diverseColors.push(color);
+          }
+        }
+        
+        setImageColors(diverseColors);
         setIsExtractingColors(false);
         
         toast({
           title: "Colors Extracted!",
-          description: `Found ${sortedColors.length} dominant colors from your image.`,
+          description: `Found ${diverseColors.length} diverse colors from your image.`,
         });
       }
     };
